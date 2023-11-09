@@ -4,7 +4,7 @@ import os
 import numpy as np
 
 import openai
-from openai.embeddings_utils import get_embedding, cosine_similarity
+
 
 from dotenv import load_dotenv, find_dotenv
 
@@ -19,14 +19,15 @@ class Command(BaseCommand):
         
         items = Movie.objects.all()
 
-        req = "película de la segunda guerra mundial"
-        emb_req = get_embedding(req,engine='text-embedding-ada-002')
-
+        req = "un joven afroamericano que crece en un barrio conflictivo de Miami"
+        emb_req = openai.embeddings.create(input=[req],model='text-embedding-ada-002').data[0].embedding
+        print("Pelicula a buscar: ",req)
         sim = []
+        
         for i in range(len(items)):
             emb = items[i].emb
             emb = list(np.frombuffer(emb))
-            sim.append(cosine_similarity(emb,emb_req))
+            sim.append(np.dot(emb_req, emb)/(np.linalg.norm(emb_req)*np.linalg.norm(emb)))
         sim = np.array(sim)
         idx = np.argmax(sim)
         idx = int(idx)
